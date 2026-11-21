@@ -3,147 +3,724 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WicksGamePigeon</title>
+  <title>WicksGames</title>
   <style>
     :root {
-      --bg: #0b1120;
-      --panel: #162033;
-      --panel-2: #0f172a;
+      --bg: #070c18;
+      --bg-glow: rgba(56, 189, 248, 0.11);
+      --panel: rgba(20, 30, 51, 0.92);
+      --panel-2: #0d1526;
+      --panel-3: #17233b;
       --text: #f8fafc;
       --muted: #94a3b8;
       --accent: #38bdf8;
-      --accent-dark: #082f49;
-      --border: #293548;
+      --accent-2: #818cf8;
+      --accent-dark: #06253b;
+      --border: rgba(148, 163, 184, 0.18);
+      --border-strong: rgba(56, 189, 248, 0.45);
       --p1: #38bdf8;
-      --p2: #f97316;
+      --p2: #fb923c;
+      --win: #4ade80;
     }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 50% -10%, rgba(56, 189, 248, 0.18), transparent 55%),
+        radial-gradient(circle at 90% 95%, rgba(129, 140, 248, 0.12), transparent 45%),
+        var(--bg);
       color: var(--text);
       display: flex;
       justify-content: center;
       padding: 18px;
+      overflow-x: hidden;
     }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.62);
+      }
+      70% {
+        transform: scale(1.08);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes dropDisc {
+      0% {
+        opacity: 0.3;
+        transform: translateY(-28px) scale(0.85);
+      }
+      75% {
+        transform: translateY(3px) scale(1.03);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes pulseLine {
+      0%, 100% { opacity: 0.85; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes capturePulse {
+      0% { transform: scale(0.72); filter: brightness(1.45); }
+      65% { transform: scale(1.08); filter: brightness(1.15); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+
+    .anim-view {
+      animation: fadeSlideIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
     .wrap {
       width: 100%;
-      max-width: 440px;
+      max-width: 444px;
       background: var(--panel);
+      backdrop-filter: blur(14px);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
       padding: 20px;
       align-self: flex-start;
     }
+
     .top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 14px;
     }
-    h1 { margin: 0; font-size: 1.35rem; }
-    .sub { margin: 4px 0 16px; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
-    .game-list { display: grid; gap: 10px; }
+
+    .top-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .top-actions button {
+      padding: 8px 10px;
+      font-size: 0.82rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 10%, #7dd3fc 65%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub {
+      margin: 4px 0 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .game-list {
+      display: grid;
+      gap: 9px;
+    }
+
     .game-card {
       width: 100%;
       text-align: left;
-      background: var(--panel-2);
+      background: linear-gradient(180deg, rgba(23, 35, 59, 0.95), rgba(13, 21, 38, 0.98));
       border: 1px solid var(--border);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 16px rgba(0, 0, 0, 0.22);
       color: var(--text);
-      border-radius: 12px;
-      padding: 14px;
+      border-radius: 14px;
+      padding: 13px 15px;
       cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     }
-    .game-card:hover { border-color: var(--accent); }
-    .game-title { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
-    .game-desc { color: var(--muted); font-size: 0.85rem; }
+
+    .game-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: 0 10px 24px rgba(2, 132, 199, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .game-card:active {
+      transform: translateY(0) scale(0.99);
+    }
+
+    .game-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .game-title::after {
+      content: "→";
+      color: var(--accent);
+      font-size: 0.95rem;
+      opacity: 0.7;
+      transition: transform 0.16s ease, opacity 0.16s ease;
+    }
+
+    .game-card:hover .game-title::after {
+      transform: translateX(3px);
+      opacity: 1;
+    }
+
+    .game-desc {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
     button {
       border: none;
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 11px;
+      padding: 10px 13px;
       font-size: 0.92rem;
       font-weight: 700;
       cursor: pointer;
-      background: var(--accent);
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
       color: var(--accent-dark);
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
     }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+      box-shadow: 0 6px 18px rgba(14, 165, 233, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
     button:disabled {
-      opacity: 0.55;
+      opacity: 0.48;
       cursor: not-allowed;
+      box-shadow: none;
     }
+
     button.ghost {
       background: var(--panel-2);
       color: var(--text);
       border: 1px solid var(--border);
       font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
-    .status {
+
+    button.ghost:hover:not(:disabled) {
+      border-color: var(--border-strong);
+      background: var(--panel-3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    input[type="text"], input[type="number"] {
       background: var(--panel-2);
+      color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      margin-bottom: 14px;
-      font-size: 0.93rem;
-      line-height: 1.35;
+      border-radius: 11px;
+      padding: 9px 12px;
+      font-size: 0.92rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+
+    input[type="text"]:focus, input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+    }
+
+    .status {
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(11, 18, 34, 0.98));
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 12px;
+      padding: 10px 13px;
+      margin-bottom: 14px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      animation: fadeSlideIn 0.2s ease;
+    }
+
+    /* Tic-Tac-Toe */
     .ttt-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 9px;
       margin: 12px 0 16px;
     }
+
     .ttt-cell {
       aspect-ratio: 1;
-      font-size: 2rem;
+      font-size: 2.1rem;
       font-weight: 800;
       background: var(--panel-2);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+
+    .ttt-cell .mark-pop {
+      display: inline-block;
+      animation: popIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .ttt-cell.is-x .mark-pop { color: var(--p1); text-shadow: 0 0 14px rgba(56, 189, 248, 0.4); }
+    .ttt-cell.is-o .mark-pop { color: var(--p2); text-shadow: 0 0 14px rgba(251, 146, 60, 0.4); }
+
+    /* Connect Four */
     .c4-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
       gap: 6px;
-      background: var(--panel-2);
-      border: 1px solid var(--border);
-      padding: 10px;
-      border-radius: 12px;
+      background: linear-gradient(180deg, #172554, #0f172a);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.45);
+      padding: 11px;
+      border-radius: 15px;
       margin: 12px 0 16px;
     }
+
     .c4-slot {
       aspect-ratio: 1;
       border-radius: 50%;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: #060b16;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.75);
       padding: 0;
     }
-    .c4-slot.p1 { background: var(--p1); border-color: var(--p1); }
-    .c4-slot.p2 { background: var(--p2); border-color: var(--p2); }
+
+    .c4-slot.p1 {
+      background: radial-gradient(circle at 32% 28%, #7dd3fc, #0284c7);
+      border-color: #bae6fd;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
+      animation: dropDisc 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .c4-slot.p2 {
+      background: radial-gradient(circle at 32% 28%, #fdba74, #ea580c);
+      border-color: #fed7aa;
+      box-shadow: 0 0 10px rgba(251, 146, 60, 0.45);
+      animation: dropDisc 0.26s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    /* Filler */
+    .filler-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      padding: 0 2px;
+    }
+
+    .filler-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+      background: linear-gradient(180deg, #0b1324, #080e1b);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 9px;
+      border-radius: 15px;
+      margin-bottom: 12px;
+      box-shadow: inset 0 3px 12px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.28);
+    }
+
+    .filler-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: inset 0 2px 3px rgba(255, 255, 255, 0.28), inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+      transition: background-color 0.22s ease, transform 0.18s ease;
+    }
+
+    .filler-cell.captured {
+      animation: capturePulse 0.3s ease;
+    }
+
+    .filler-cell.origin-p1 {
+      outline: 2px solid #38bdf8;
+      outline-offset: -1px;
+    }
+
+    .filler-cell.origin-p2 {
+      outline: 2px solid #fb923c;
+      outline-offset: -1px;
+    }
+
+    .filler-palette {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .filler-swatch {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.34);
+      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 5px 14px rgba(0, 0, 0, 0.35);
+      padding: 0;
+    }
+
+    /* Chess */
+    .chess-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      border: 2px solid rgba(148, 163, 184, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 12px 0 16px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+    }
+
+    .chess-sq {
+      aspect-ratio: 1;
+      border-radius: 0;
+      padding: 12%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: none;
+    }
+
+    .chess-sq.light { background: #d8e1ec; }
+    .chess-sq.dark { background: #475569; }
+
+    .chess-piece-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transition: transform 0.16s ease;
+    }
+
+    .chess-sq:hover:not(:disabled) .chess-piece-svg {
+      transform: scale(1.08);
+    }
+
+    .chess-sq.piece-white .chess-piece-svg {
+      fill: #ffffff;
+      stroke: #0f172a;
+      stroke-width: 2.2;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.35));
+    }
+
+    .chess-sq.piece-black .chess-piece-svg {
+      fill: #090d16;
+      stroke: #090d16;
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+    }
+
+    .chess-sq.selected {
+      outline: 3px solid #facc15;
+      outline-offset: -3px;
+      background: #64748b;
+    }
+
+    .chess-sq.target { box-shadow: inset 0 0 0 3px #22c55e; }
+    .chess-sq.capture { box-shadow: inset 0 0 0 3px #ef4444; }
+
+    /* Wordle */
+    .wordle-board {
+      display: grid;
+      gap: 6px;
+      margin: 12px 0;
+    }
+
+    .wordle-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .wordle-tile {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, background-color 0.25s ease;
+    }
+
+    .wordle-tile.g {
+      background: linear-gradient(145deg, #22c55e, #15803d);
+      border-color: #4ade80;
+      color: #fff;
+      animation: popIn 0.22s ease;
+    }
+
+    .wordle-tile.y {
+      background: linear-gradient(145deg, #eab308, #a16207);
+      border-color: #fde047;
+      color: #fff;
+      animation: popIn 0.22s ease;
+    }
+
+    .wordle-tile.x {
+      background: #1e293b;
+      border-color: #334155;
+      color: #94a3b8;
+      animation: popIn 0.2s ease;
+    }
+
+    .inline-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .inline-form input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Hangman */
+    .hangman-word {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      margin: 12px 0;
+      min-height: 40px;
+    }
+
+    .hangman-slot {
+      min-width: 25px;
+      padding: 4px 6px;
+      border-bottom: 2px solid var(--accent);
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      animation: popIn 0.2s ease;
+    }
+
+    .hangman-slot.space {
+      border-bottom: none;
+      min-width: 12px;
+    }
+
+    .letter-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .letter-btn {
+      padding: 8px 0;
+      font-size: 0.85rem;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .letter-btn:hover:not(:disabled) {
+      background: var(--panel-3);
+      border-color: var(--border-strong);
+      box-shadow: none;
+    }
+
+    /* RPS */
+    .rps-choices {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .rps-scores {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 0.88rem;
+    }
+
+    /* Golf */
+    .golf-box {
+      background: linear-gradient(180deg, #0c2b1a, #071b10);
+      border: 1px solid rgba(134, 239, 172, 0.3);
+      border-radius: 15px;
+      padding: 9px;
+      margin-bottom: 12px;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5), 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .golf-aim-pulse {
+      animation: pulseLine 1.1s ease-in-out infinite;
+    }
+
+    .golf-controls {
+      display: grid;
+      gap: 9px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .golf-controls label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .golf-controls input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Paintball */
+    .pb-status {
+      display: flex;
+      justify-content: space-between;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 13px;
+      margin-bottom: 12px;
+      font-size: 0.88rem;
+    }
+
+    .pb-lanes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pb-lane {
+      background: linear-gradient(180deg, rgba(23, 35, 59, 0.9), rgba(11, 18, 34, 0.96));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 9px 6px 8px;
+      text-align: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .pb-lane.has-pick {
+      border-color: rgba(250, 204, 21, 0.65);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(250, 204, 21, 0.14);
+    }
+
+    .pb-lane-title {
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .pb-bunker-svg {
+      width: 100%;
+      height: 68px;
+      display: block;
+      margin: 0 auto 6px;
+      overflow: visible;
+    }
+
+    .pb-actions {
+      display: grid;
+      gap: 5px;
+    }
+
+    .pb-actions button {
+      padding: 6px 4px;
+      font-size: 0.76rem;
+    }
+
+    .pb-actions button.picked {
+      outline: 2px solid #facc15;
+    }
+
     .share {
       margin-top: 14px;
       padding-top: 14px;
       border-top: 1px solid var(--border);
     }
+
     .share label {
       display: block;
       font-size: 0.82rem;
       color: var(--muted);
       margin-bottom: 6px;
     }
-    .share-row { display: flex; gap: 8px; }
+
+    .share-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .share input {
       flex: 1;
       min-width: 0;
       background: var(--panel-2);
       color: var(--muted);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 10px;
+      border-radius: 11px;
+      padding: 9px 11px;
       font-size: 0.8rem;
     }
+
     .meta-row {
       display: flex;
       justify-content: space-between;
@@ -151,36 +728,81 @@
       margin-top: 8px;
       gap: 8px;
     }
+
     .feedback {
       min-height: 1.2em;
       font-size: 0.84rem;
-      color: #4ade80;
+      color: var(--win);
+      font-weight: 600;
     }
+
     .unlock-link {
       background: none;
       border: none;
+      box-shadow: none;
       color: var(--muted);
       font-size: 0.78rem;
       font-weight: 500;
       padding: 2px 4px;
       text-decoration: underline;
     }
-    .hidden { display: none; }
+
+    .unlock-link:hover:not(:disabled) {
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div id="lobbyView">
-      <h1>WicksGamePigeon</h1>
-      <p class="sub">Choose a game and then send the link to me and then i will send the link back</p>
+    <div id="lobbyView" class="anim-view">
+      <div class="top">
+        <h1>WicksGames</h1>
+        <div class="top-actions">
+          <button type="button" class="ghost sound-toggle-btn">🔊 Sound</button>
+        </div>
+      </div>
+      <p class="sub">Pick a game to start a match, play your turn, and text the link to your friend.</p>
       <div class="game-list">
         <button type="button" class="game-card" data-start-game="ttt">
-          <div class="game-title">Tic tac toe</div>
-          <div class="game-desc">This is tic tac toe YAYAYAYA</div>
+          <div class="game-title">Tic-Tac-Toe</div>
+          <div class="game-desc">Classic 3x3 grid. Player 1 is X, Player 2 is O.</div>
         </button>
         <button type="button" class="game-card" data-start-game="c4">
-          <div class="game-title">Connect four</div>
-          <div class="game-desc">Play</div>
+          <div class="game-title">Connect Four</div>
+          <div class="game-desc">Tap any column to drop a disc. First to 4 in a row wins.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="filler">
+          <div class="game-title">Filler</div>
+          <div class="game-desc">Flood territory from opposite corners and claim more than half the board.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="chess">
+          <div class="game-title">Chess</div>
+          <div class="game-desc">Full rules including castling, en passant, and checkmate.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="wordle">
+          <div class="game-title">Wordle Duel</div>
+          <div class="game-desc">Set a 5-letter word, send the link, and play guesses until game over.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="hangman">
+          <div class="game-title">Hangman</div>
+          <div class="game-desc">Pick a secret word, send the link, and guess letters until game over.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="rps">
+          <div class="game-title">Rock Paper Scissors</div>
+          <div class="game-desc">Best of 3 rounds with secret picks revealed each turn.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="golf">
+          <div class="game-title">Golf</div>
+          <div class="game-desc">3-hole mini-golf with live ball physics and aim/power line.</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="paintball">
+          <div class="game-title">Paintball</div>
+          <div class="game-desc">3 lives, 3 tires. Hide behind a tire and shoot a tire each turn.</div>
         </button>
       </div>
     </div>
@@ -188,7 +810,8 @@
     <div id="matchView" class="hidden">
       <div class="top">
         <h1 id="matchTitle">Match</h1>
-        <div style="display:flex; gap:8px;">
+        <div class="top-actions">
+          <button type="button" class="ghost sound-toggle-btn">🔊</button>
           <button type="button" id="restartBtn" class="ghost">Restart</button>
           <button type="button" id="lobbyBtn" class="ghost">Games</button>
         </div>
@@ -197,7 +820,7 @@
       <div id="boardArea"></div>
 
       <div class="share">
-        <label for="linkField">Send this link to do the next turn</label>
+        <label id="linkLabel" for="linkField">Send this link for the next turn:</label>
         <div class="share-row">
           <input id="linkField" type="text" readonly />
           <button type="button" id="copyLinkBtn">Copy Link</button>
@@ -211,52 +834,622 @@
   </div>
 
   <script>
+    // --- SYNTHESIZED WEB AUDIO SFX ENGINE ---
+    const SFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function ensureCtx() {
+        if (muted) return null;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        if (!ctx) ctx = new AudioCtx();
+        if (ctx.state === "suspended") {
+          ctx.resume().catch(() => {});
+        }
+        return ctx;
+      }
+
+      function tone(freq, endFreq, duration, type = "sine", gainVal = 0.09, delay = 0) {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const now = ac.currentTime + delay;
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (endFreq !== null && endFreq !== freq) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), now + duration);
+        }
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(gainVal, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      function noiseBurst(duration, filterFreq, gainVal = 0.12) {
+        const ac = ensureCtx();
+        if (!ac) return;
+        const sampleCount = Math.floor(ac.sampleRate * duration);
+        const buffer = ac.createBuffer(1, sampleCount, ac.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < sampleCount; i++) {
+          data[i] = (Math.random() * 2 - 1) * (1 - i / sampleCount);
+        }
+        const src = ac.createBufferSource();
+        src.buffer = buffer;
+
+        const filter = ac.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(filterFreq, ac.currentTime);
+
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(gainVal, ac.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+
+        src.connect(filter);
+        filter.connect(gain);
+        gain.connect(ac.destination);
+        src.start();
+      }
+
+      return {
+        isMuted() { return muted; },
+        setMuted(val) {
+          muted = Boolean(val);
+          if (!muted) ensureCtx();
+        },
+        click() { tone(520, 660, 0.06, "triangle", 0.06); },
+        move() { tone(360, 540, 0.11, "sine", 0.09); },
+        flood() {
+          tone(300, 440, 0.12, "triangle", 0.08, 0);
+          tone(440, 620, 0.14, "triangle", 0.08, 0.06);
+        },
+        guessHit() { tone(587.33, 783.99, 0.13, "triangle", 0.09); },
+        guessMiss() { tone(240, 155, 0.16, "sawtooth", 0.06); },
+        putt(powerPct = 50) {
+          const base = 170 + (powerPct / 100) * 140;
+          tone(base, base * 0.65, 0.13, "sine", 0.11);
+        },
+        bounce() { tone(290, 190, 0.07, "triangle", 0.08); },
+        cupSink() {
+          tone(523.25, 659.25, 0.11, "sine", 0.1, 0);
+          tone(659.25, 783.99, 0.14, "sine", 0.1, 0.08);
+          tone(783.99, 1046.5, 0.2, "sine", 0.11, 0.16);
+        },
+        pbPick() { tone(680, 740, 0.05, "sine", 0.06); },
+        pbShot() {
+          noiseBurst(0.11, 1400, 0.13);
+          tone(480, 140, 0.1, "square", 0.06);
+        },
+        pbHit() {
+          noiseBurst(0.16, 750, 0.16);
+          tone(180, 75, 0.18, "sawtooth", 0.09);
+        },
+        win() {
+          tone(523.25, null, 0.12, "triangle", 0.09, 0);
+          tone(659.25, null, 0.12, "triangle", 0.09, 0.1);
+          tone(783.99, null, 0.22, "triangle", 0.1, 0.2);
+        },
+        lose() {
+          tone(349.23, 311.13, 0.15, "sawtooth", 0.06, 0);
+          tone(293.66, 220, 0.24, "sawtooth", 0.06, 0.14);
+        }
+      };
+    })();
+
     const lobbyView = document.getElementById("lobbyView");
     const matchView = document.getElementById("matchView");
     const matchTitle = document.getElementById("matchTitle");
     const statusBox = document.getElementById("statusBox");
     const boardArea = document.getElementById("boardArea");
+    const linkLabel = document.getElementById("linkLabel");
     const linkField = document.getElementById("linkField");
     const feedback = document.getElementById("feedback");
     const unlockBtn = document.getElementById("unlockBtn");
 
-    // Locks extra moves on the SAME page load after you take your turn
     let movedThisSession = false;
+    let selectedChessSquare = null;
+    let activeGolfAnimId = null;
+    let lastCapturedIndices = new Set();
 
+    function syncSoundButtons() {
+      const muted = SFX.isMuted();
+      document.querySelectorAll(".sound-toggle-btn").forEach(btn => {
+        const fullLabel = btn.textContent.includes("Sound");
+        btn.textContent = muted
+          ? (fullLabel ? "🔇 Muted" : "🔇")
+          : (fullLabel ? "🔊 Sound" : "🔊");
+        btn.title = muted ? "Unmute sound effects" : "Mute sound effects";
+      });
+    }
+
+    document.querySelectorAll(".sound-toggle-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const nextMuted = !SFX.isMuted();
+        SFX.setMuted(nextMuted);
+        syncSoundButtons();
+        if (!nextMuted) SFX.click();
+      });
+    });
+
+    function cancelGolfAnimation() {
+      if (activeGolfAnimId !== null) {
+        cancelAnimationFrame(activeGolfAnimId);
+        activeGolfAnimId = null;
+      }
+    }
+
+    function replayBoardAnimation() {
+      boardArea.classList.remove("anim-view");
+      void boardArea.offsetWidth;
+      boardArea.classList.add("anim-view");
+    }
+
+    // --- FILLER CONSTANTS & HELPERS ---
+    const FILLER_ROWS = 7;
+    const FILLER_COLS = 8;
+    const FILLER_COLORS = [
+      "#ef4444", "#eab308", "#22c55e", "#a855f7", "#ec4899", "#14b8a6"
+    ];
+
+    function getConnectedRegion(board, startIdx) {
+      const targetColor = board[startIdx];
+      const visited = new Set([startIdx]);
+      const queue = [startIdx];
+      while (queue.length > 0) {
+        const cur = queue.shift();
+        const r = Math.floor(cur / FILLER_COLS);
+        const c = cur % FILLER_COLS;
+        const neighbors = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
+        for (const [nr, nc] of neighbors) {
+          if (nr < 0 || nr >= FILLER_ROWS || nc < 0 || nc >= FILLER_COLS) continue;
+          const nIdx = nr * FILLER_COLS + nc;
+          if (!visited.has(nIdx) && board[nIdx] === targetColor) {
+            visited.add(nIdx);
+            queue.push(nIdx);
+          }
+        }
+      }
+      return visited;
+    }
+
+    function countFillerTerritories(board) {
+      const p1Start = (FILLER_ROWS - 1) * FILLER_COLS + 0;
+      const p2Start = 0 * FILLER_COLS + (FILLER_COLS - 1);
+      const p1Set = getConnectedRegion(board, p1Start);
+      const p2Set = getConnectedRegion(board, p2Start);
+      return {
+        p1: p1Set.size,
+        p2: p2Set.size,
+        p1Color: board[p1Start],
+        p2Color: board[p2Start]
+      };
+    }
+
+    function generateFillerBoard() {
+      const board = Array(FILLER_ROWS * FILLER_COLS).fill(0);
+      const p1Start = (FILLER_ROWS - 1) * FILLER_COLS + 0;
+      const p2Start = 0 * FILLER_COLS + (FILLER_COLS - 1);
+
+      for (let r = 0; r < FILLER_ROWS; r++) {
+        for (let c = 0; c < FILLER_COLS; c++) {
+          const idx = r * FILLER_COLS + c;
+          const forbidden = new Set();
+          if (r > 0) forbidden.add(board[(r - 1) * FILLER_COLS + c]);
+          if (c > 0) forbidden.add(board[r * FILLER_COLS + (c - 1)]);
+          const choices = [0, 1, 2, 3, 4, 5].filter(x => !forbidden.has(x));
+          board[idx] = choices[Math.floor(Math.random() * choices.length)];
+        }
+      }
+
+      if (board[p1Start] === board[p2Start]) {
+        board[p2Start] = (board[p1Start] + 1) % 6;
+      }
+      return board;
+    }
+
+    // --- CHESS CONSTANTS & ENGINE ---
+    function createChessPieceSVG(type) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 45 45");
+      svg.setAttribute("class", "chess-piece-svg");
+      svg.setAttribute("aria-hidden", "true");
+
+      const shapes = {
+        P: [
+          '<circle cx="22.5" cy="13.5" r="6.2"/>',
+          '<path d="M13 35.5c1.5-6.5 5-9.5 9.5-9.5s8 3 9.5 9.5z"/>',
+          '<rect x="9.5" y="35.5" width="26" height="4" rx="1.5"/>'
+        ],
+        R: [
+          '<path d="M11 10h4v4h5v-4h5v4h5v-4h4v8l-3.5 3.5V34h-17V21.5L11 18z"/>',
+          '<rect x="9" y="34.5" width="27" height="4.5" rx="1.5"/>'
+        ],
+        N: [
+          '<path d="M14 35c.5-7 2-12.5 7-17l-2.5-2.5L23 9l4 3c5.5 2 8.5 7.5 8 15-.3 3.5-1.5 6-3 8z"/>',
+          '<rect x="10" y="35" width="25" height="4" rx="1.5"/>'
+        ],
+        B: [
+          '<circle cx="22.5" cy="8.5" r="3"/>',
+          '<path d="M22.5 12.5c-6.5 5-9 11.5-7 22h14c2-10.5-.5-17-7-22z"/>',
+          '<rect x="10" y="35" width="25" height="4" rx="1.5"/>'
+        ],
+        Q: [
+          '<circle cx="9" cy="14" r="2.7"/>',
+          '<circle cx="15.7" cy="11" r="2.7"/>',
+          '<circle cx="22.5" cy="9.5" r="2.7"/>',
+          '<circle cx="29.3" cy="11" r="2.7"/>',
+          '<circle cx="36" cy="14" r="2.7"/>',
+          '<path d="M10.5 16.5L14 34.5h17l3.5-18-6.5 7.5-5.5-9.5-5.5 9.5z"/>',
+          '<rect x="10" y="35" width="25" height="4" rx="1.5"/>'
+        ],
+        K: [
+          '<rect x="20.5" y="5" width="4" height="10" rx="1"/>',
+          '<rect x="17.5" y="8" width="10" height="4" rx="1"/>',
+          '<path d="M13 34.5c-2.5-4.5-3.5-9.5-1.5-14 1.5-3.5 5-5 8-3.5l3 4.5 3-4.5c3-1.5 6.5 0 8 3.5 2 4.5 1 9.5-1.5 14z"/>',
+          '<rect x="10" y="35" width="25" height="4" rx="1.5"/>'
+        ]
+      };
+
+      svg.innerHTML = (shapes[type] || []).join("");
+      return svg;
+    }
+
+    function createInitialChessBoard() {
+      const b = Array(64).fill(null);
+      const backRank = ["R", "N", "B", "Q", "K", "B", "N", "R"];
+      for (let c = 0; c < 8; c++) {
+        b[0 * 8 + c] = "b" + backRank[c];
+        b[1 * 8 + c] = "bP";
+        b[6 * 8 + c] = "wP";
+        b[7 * 8 + c] = "w" + backRank[c];
+      }
+      return b;
+    }
+
+    function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+    function pieceColor(p) { return p ? p[0] : null; }
+    function pieceType(p) { return p ? p[1] : null; }
+
+    function isSquareAttacked(board, targetR, targetC, attackerColor) {
+      const pawnDir = attackerColor === "w" ? -1 : 1;
+      for (const dc of [-1, 1]) {
+        const pr = targetR - pawnDir;
+        const pc = targetC - dc;
+        if (inBounds(pr, pc) && board[pr * 8 + pc] === attackerColor + "P") return true;
+      }
+      const knightJumps = [
+        [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+        [1, -2], [1, 2], [2, -1], [2, 1]
+      ];
+      for (const [dr, dc] of knightJumps) {
+        const nr = targetR + dr;
+        const nc = targetC + dc;
+        if (inBounds(nr, nc) && board[nr * 8 + nc] === attackerColor + "N") return true;
+      }
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const kr = targetR + dr;
+          const kc = targetC + dc;
+          if (inBounds(kr, kc) && board[kr * 8 + kc] === attackerColor + "K") return true;
+        }
+      }
+      const ortho = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (const [dr, dc] of ortho) {
+        let nr = targetR + dr, nc = targetC + dc;
+        while (inBounds(nr, nc)) {
+          const p = board[nr * 8 + nc];
+          if (p) {
+            if (pieceColor(p) === attackerColor && (pieceType(p) === "R" || pieceType(p) === "Q")) return true;
+            break;
+          }
+          nr += dr; nc += dc;
+        }
+      }
+      const diag = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+      for (const [dr, dc] of diag) {
+        let nr = targetR + dr, nc = targetC + dc;
+        while (inBounds(nr, nc)) {
+          const p = board[nr * 8 + nc];
+          if (p) {
+            if (pieceColor(p) === attackerColor && (pieceType(p) === "B" || pieceType(p) === "Q")) return true;
+            break;
+          }
+          nr += dr; nc += dc;
+        }
+      }
+      return false;
+    }
+
+    function findKingIndex(board, color) { return board.findIndex(p => p === color + "K"); }
+
+    function isInCheck(board, color) {
+      const kIdx = findKingIndex(board, color);
+      if (kIdx === -1) return false;
+      return isSquareAttacked(board, Math.floor(kIdx / 8), kIdx % 8, color === "w" ? "b" : "w");
+    }
+
+    function getPseudoLegalMovesForSquare(board, idx, rights, epTarget) {
+      const p = board[idx];
+      if (!p) return [];
+      const color = pieceColor(p);
+      const enemy = color === "w" ? "b" : "w";
+      const type = pieceType(p);
+      const r = Math.floor(idx / 8);
+      const c = idx % 8;
+      const moves = [];
+      const addMove = (tr, tc, extra = {}) => moves.push({ to: tr * 8 + tc, ...extra });
+
+      if (type === "P") {
+        const dir = color === "w" ? -1 : 1;
+        const startRow = color === "w" ? 6 : 1;
+        const promoRow = color === "w" ? 0 : 7;
+        const f1r = r + dir;
+        if (inBounds(f1r, c) && !board[f1r * 8 + c]) {
+          addMove(f1r, c, { promo: f1r === promoRow });
+          const f2r = r + dir * 2;
+          if (r === startRow && !board[f2r * 8 + c]) addMove(f2r, c, { doublePawn: true });
+        }
+        for (const dc of [-1, 1]) {
+          const cr = r + dir, cc = c + dc;
+          if (!inBounds(cr, cc)) continue;
+          const tIdx = cr * 8 + cc;
+          const targetPiece = board[tIdx];
+          if (targetPiece && pieceColor(targetPiece) === enemy) addMove(cr, cc, { promo: cr === promoRow });
+          else if (epTarget === tIdx) addMove(cr, cc, { enPassant: true });
+        }
+      } else if (type === "N") {
+        for (const [dr, dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
+          const nr = r + dr, nc = c + dc;
+          if (!inBounds(nr, nc)) continue;
+          const tp = board[nr * 8 + nc];
+          if (!tp || pieceColor(tp) === enemy) addMove(nr, nc);
+        }
+      } else if (type === "K") {
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = r + dr, nc = c + dc;
+            if (!inBounds(nr, nc)) continue;
+            const tp = board[nr * 8 + nc];
+            if (!tp || pieceColor(tp) === enemy) addMove(nr, nc);
+          }
+        }
+        if (!isInCheck(board, color)) {
+          if (color === "w" && r === 7 && c === 4) {
+            if (rights.includes("K") && !board[7*8+5] && !board[7*8+6] && board[7*8+7] === "wR" &&
+                !isSquareAttacked(board, 7, 5, "b") && !isSquareAttacked(board, 7, 6, "b")) addMove(7, 6, { castle: "K" });
+            if (rights.includes("Q") && !board[7*8+3] && !board[7*8+2] && !board[7*8+1] && board[7*8+0] === "wR" &&
+                !isSquareAttacked(board, 7, 3, "b") && !isSquareAttacked(board, 7, 2, "b")) addMove(7, 2, { castle: "Q" });
+          } else if (color === "b" && r === 0 && c === 4) {
+            if (rights.includes("k") && !board[0*8+5] && !board[0*8+6] && board[0*8+7] === "bR" &&
+                !isSquareAttacked(board, 0, 5, "w") && !isSquareAttacked(board, 0, 6, "w")) addMove(0, 6, { castle: "k" });
+            if (rights.includes("q") && !board[0*8+3] && !board[0*8+2] && !board[0*8+1] && board[0*8+0] === "bR" &&
+                !isSquareAttacked(board, 0, 3, "w") && !isSquareAttacked(board, 0, 2, "w")) addMove(0, 2, { castle: "q" });
+          }
+        }
+      } else {
+        const dirs = [];
+        if (type === "R" || type === "Q") dirs.push([-1,0],[1,0],[0,-1],[0,1]);
+        if (type === "B" || type === "Q") dirs.push([-1,-1],[-1,1],[1,-1],[1,1]);
+        for (const [dr, dc] of dirs) {
+          let nr = r + dr, nc = c + dc;
+          while (inBounds(nr, nc)) {
+            const tp = board[nr * 8 + nc];
+            if (!tp) addMove(nr, nc);
+            else { if (pieceColor(tp) === enemy) addMove(nr, nc); break; }
+            nr += dr; nc += dc;
+          }
+        }
+      }
+      return moves;
+    }
+
+    function applyChessMove(state, fromIdx, move) {
+      const nextBoard = state.b.slice();
+      const movingPiece = nextBoard[fromIdx];
+      const color = pieceColor(movingPiece);
+      const type = pieceType(movingPiece);
+      const toIdx = move.to;
+      const fromR = Math.floor(fromIdx / 8);
+      const toR = Math.floor(toIdx / 8);
+
+      nextBoard[fromIdx] = null;
+      if (move.enPassant) nextBoard[fromR * 8 + (toIdx % 8)] = null;
+      if (move.castle === "K") { nextBoard[7*8+5] = "wR"; nextBoard[7*8+7] = null; }
+      else if (move.castle === "Q") { nextBoard[7*8+3] = "wR"; nextBoard[7*8+0] = null; }
+      else if (move.castle === "k") { nextBoard[0*8+5] = "bR"; nextBoard[0*8+7] = null; }
+      else if (move.castle === "q") { nextBoard[0*8+3] = "bR"; nextBoard[0*8+0] = null; }
+
+      nextBoard[toIdx] = move.promo ? color + "Q" : movingPiece;
+
+      let nextRights = state.cr || "";
+      if (type === "K") nextRights = nextRights.replace(color === "w" ? /[KQ]/g : /[kq]/g, "");
+      if (fromIdx === 7*8+7 || toIdx === 7*8+7) nextRights = nextRights.replace("K", "");
+      if (fromIdx === 7*8+0 || toIdx === 7*8+0) nextRights = nextRights.replace("Q", "");
+      if (fromIdx === 0*8+7 || toIdx === 0*8+7) nextRights = nextRights.replace("k", "");
+      if (fromIdx === 0*8+0 || toIdx === 0*8+0) nextRights = nextRights.replace("q", "");
+
+      const nextEp = move.doublePawn ? ((fromR + toR) / 2) * 8 + (fromIdx % 8) : null;
+      return { board: nextBoard, rights: nextRights, ep: nextEp };
+    }
+
+    function getLegalMovesForSquare(state, fromIdx) {
+      const p = state.b[fromIdx];
+      if (!p || pieceColor(p) !== state.t) return [];
+      return getPseudoLegalMovesForSquare(state.b, fromIdx, state.cr || "", state.ep ?? null)
+        .filter(m => !isInCheck(applyChessMove(state, fromIdx, m).board, state.t));
+    }
+
+    function hasAnyLegalMove(state, color) {
+      const tempState = { ...state, t: color };
+      for (let i = 0; i < 64; i++) {
+        if (pieceColor(state.b[i]) === color && getLegalMovesForSquare(tempState, i).length > 0) return true;
+      }
+      return false;
+    }
+
+    // --- WORDLE HELPERS ---
+    function scoreWordleGuess(guess, target) {
+      const res = Array(5).fill("x");
+      const targetArr = target.split("");
+      const guessArr = guess.split("");
+      for (let i = 0; i < 5; i++) {
+        if (guessArr[i] === targetArr[i]) {
+          res[i] = "g";
+          targetArr[i] = null;
+          guessArr[i] = null;
+        }
+      }
+      for (let i = 0; i < 5; i++) {
+        if (guessArr[i]) {
+          const foundIdx = targetArr.indexOf(guessArr[i]);
+          if (foundIdx !== -1) {
+            res[i] = "y";
+            targetArr[foundIdx] = null;
+          }
+        }
+      }
+      return res;
+    }
+
+    // --- GOLF HOLE CONFIGURATIONS & PHYSICS ---
+    const GOLF_HOLES = [
+      { start: { x: 65, y: 120 }, cup: { x: 325, y: 120 }, wall: { x: 195, y: 65, w: 22, h: 110 } },
+      { start: { x: 60, y: 175 }, cup: { x: 320, y: 65 }, wall: { x: 185, y: 95, w: 24, h: 115 } },
+      { start: { x: 65, y: 65 }, cup: { x: 325, y: 175 }, wall: { x: 165, y: 30, w: 22, h: 110 } }
+    ];
+
+    function stepGolfPhysics(holeIdx, body) {
+      const hole = GOLF_HOLES[holeIdx] || GOLF_HOLES[0];
+      const r = 7;
+      const cupR = 13;
+      const w = hole.wall;
+
+      let x = body.x + body.vx;
+      let y = body.y + body.vy;
+      let vx = body.vx * 0.974;
+      let vy = body.vy * 0.974;
+      let holed = false;
+      let bounced = false;
+
+      if (x - r < 14) { x = 14 + r; vx = Math.abs(vx) * 0.78; bounced = true; }
+      if (x + r > 376) { x = 376 - r; vx = -Math.abs(vx) * 0.78; bounced = true; }
+      if (y - r < 14) { y = 14 + r; vy = Math.abs(vy) * 0.78; bounced = true; }
+      if (y + r > 226) { y = 226 - r; vy = -Math.abs(vy) * 0.78; bounced = true; }
+
+      if (x + r > w.x && x - r < w.x + w.w && y + r > w.y && y - r < w.y + w.h) {
+        const overlapLeft = (x + r) - w.x;
+        const overlapRight = (w.x + w.w) - (x - r);
+        const overlapTop = (y + r) - w.y;
+        const overlapBottom = (w.y + w.h) - (y - r);
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+        if (minOverlap === overlapLeft) { x = w.x - r; vx = -Math.abs(vx) * 0.78; }
+        else if (minOverlap === overlapRight) { x = w.x + w.w + r; vx = Math.abs(vx) * 0.78; }
+        else if (minOverlap === overlapTop) { y = w.y - r; vy = -Math.abs(vy) * 0.78; }
+        else { y = w.y + w.h + r; vy = Math.abs(vy) * 0.78; }
+        bounced = true;
+      }
+
+      const dist = Math.hypot(x - hole.cup.x, y - hole.cup.y);
+      if (dist <= cupR && Math.hypot(vx, vy) < 11.5) {
+        x = hole.cup.x;
+        y = hole.cup.y;
+        vx = 0;
+        vy = 0;
+        holed = true;
+      }
+
+      const stopped = holed || Math.hypot(vx, vy) < 0.14;
+      if (stopped && !holed) {
+        vx = 0;
+        vy = 0;
+      }
+
+      return { x, y, vx, vy, holed, bounced, stopped };
+    }
+
+    function createPaintballBunkerSVG(laneIdx, isHiddenHere, isAimedHere, hitColor) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 80 68");
+      svg.setAttribute("class", "pb-bunker-svg");
+      svg.setAttribute("aria-hidden", "true");
+
+      const badges = [];
+      if (isHiddenHere) {
+        badges.push('<circle cx="64" cy="12" r="8" fill="#38bdf8" stroke="#082f49" stroke-width="1.5"/><text x="64" y="15" text-anchor="middle" font-size="8" font-weight="900" fill="#082f49">H</text>');
+      }
+      if (isAimedHere) {
+        badges.push('<circle cx="16" cy="12" r="8" fill="#facc15" stroke="#422006" stroke-width="1.5"/><text x="16" y="15" text-anchor="middle" font-size="8" font-weight="900" fill="#422006">🎯</text>');
+      }
+
+      const splat = hitColor
+        ? `<g>
+             <circle cx="40" cy="36" r="13" fill="${hitColor}" opacity="0.88"/>
+             <circle cx="24" cy="24" r="4" fill="${hitColor}"/>
+             <circle cx="57" cy="26" r="4.5" fill="${hitColor}"/>
+             <circle cx="27" cy="50" r="3.5" fill="${hitColor}"/>
+             <circle cx="55" cy="49" r="3" fill="${hitColor}"/>
+           </g>`
+        : "";
+
+      svg.innerHTML = `
+        <ellipse cx="40" cy="58" rx="25" ry="5" fill="rgba(0,0,0,0.45)"/>
+        <circle cx="40" cy="36" r="22" fill="#0f172a" stroke="#334155" stroke-width="7"/>
+        <circle cx="40" cy="36" r="15" fill="#1e293b" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="40" cy="36" r="6" fill="#090d16"/>
+        <line x1="40" y1="14" x2="40" y2="21" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+        <line x1="40" y1="51" x2="40" y2="58" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+        <line x1="18" y1="36" x2="25" y2="36" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+        <line x1="55" y1="36" x2="62" y2="36" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+        ${splat}
+        ${badges.join("")}
+      `;
+      return svg;
+    }
+
+    // --- GAMES REGISTRY ---
     const GAMES = {
       ttt: {
-        name: "Tic tac toe",
+        name: "Tic-Tac-Toe",
         init() {
-          return {
-            g: "ttt",
-            b: ["", "", "", "", "", "", "", "", ""],
-            t: "X",
-            w: null
-          };
+          return { g: "ttt", b: ["", "", "", "", "", "", "", "", ""], t: "X", w: null };
         },
         render(state, commit, locked) {
-          if (state.w === "DRAW") {
-            statusBox.textContent = "Game over draw.";
-          } else if (state.w) {
-            statusBox.textContent = `Game over player ${state.w} won`;
-          } else if (locked) {
-            statusBox.textContent = `Copy and send the link player ${state.t}s turn.`;
-          } else {
-            statusBox.textContent = `Turn player ${state.t}`;
-          }
+          if (state.w === "DRAW") statusBox.textContent = "Game over — Draw.";
+          else if (state.w) statusBox.textContent = `Game over — Player ${state.w} wins!`;
+          else if (locked) statusBox.textContent = `Move recorded! Copy & send the link for Player ${state.t}'s turn.`;
+          else statusBox.textContent = `Turn: Player ${state.t}`;
 
           const grid = document.createElement("div");
           grid.className = "ttt-grid";
           state.b.forEach((val, idx) => {
             const cell = document.createElement("button");
             cell.type = "button";
-            cell.className = "ttt-cell";
-            cell.textContent = val;
+            cell.className = "ttt-cell" + (val === "X" ? " is-x" : val === "O" ? " is-o" : "");
+            if (val) {
+              const span = document.createElement("span");
+              span.className = "mark-pop";
+              span.textContent = val;
+              cell.appendChild(span);
+            }
             cell.disabled = locked || Boolean(val) || Boolean(state.w);
             cell.addEventListener("click", () => {
               state.b[idx] = state.t;
               state.w = checkTTTWin(state.b);
-              if (!state.w) state.t = state.t === "X" ? "O" : "X";
+              if (!state.w) {
+                state.t = state.t === "X" ? "O" : "X";
+                SFX.move();
+              } else if (state.w === "DRAW") {
+                SFX.guessMiss();
+              } else {
+                SFX.win();
+              }
               movedThisSession = true;
               commit(state);
             });
@@ -268,27 +1461,16 @@
       c4: {
         name: "Connect Four",
         init() {
-          return {
-            g: "c4",
-            b: Array(42).fill(0),
-            t: 1,
-            w: null
-          };
+          return { g: "c4", b: Array(42).fill(0), t: 1, w: null };
         },
         render(state, commit, locked) {
-          if (state.w === "DRAW") {
-            statusBox.textContent = "Game over — Board is full (Draw).";
-          } else if (state.w) {
-            statusBox.textContent = `Game over — Player ${state.w} wins!`;
-          } else if (locked) {
-            statusBox.textContent = `Move recorded! Copy & send the link for Player ${state.t}'s turn.`;
-          } else {
-            statusBox.textContent = `Turn: Player ${state.t} (${state.t === 1 ? "Blue" : "Orange"})`;
-          }
+          if (state.w === "DRAW") statusBox.textContent = "Game over — Board is full (Draw).";
+          else if (state.w) statusBox.textContent = `Game over — Player ${state.w} wins!`;
+          else if (locked) statusBox.textContent = `Move recorded! Copy & send the link for Player ${state.t}'s turn.`;
+          else statusBox.textContent = `Turn: Player ${state.t} (${state.t === 1 ? "Blue" : "Orange"})`;
 
           const grid = document.createElement("div");
           grid.className = "c4-grid";
-
           for (let r = 0; r < 6; r++) {
             for (let c = 0; c < 7; c++) {
               const idx = r * 7 + c;
@@ -303,7 +1485,14 @@
                 if (targetRow === -1) return;
                 state.b[targetRow * 7 + c] = state.t;
                 state.w = checkC4Win(state.b);
-                if (!state.w) state.t = state.t === 1 ? 2 : 1;
+                if (!state.w) {
+                  state.t = state.t === 1 ? 2 : 1;
+                  SFX.move();
+                } else if (state.w === "DRAW") {
+                  SFX.guessMiss();
+                } else {
+                  SFX.win();
+                }
                 movedThisSession = true;
                 commit(state);
               });
@@ -312,15 +1501,846 @@
           }
           boardArea.appendChild(grid);
         }
+      },
+      filler: {
+        name: "Filler",
+        init() {
+          lastCapturedIndices = new Set();
+          return { g: "filler", b: generateFillerBoard(), t: 1, w: null };
+        },
+        render(state, commit, locked) {
+          const counts = countFillerTerritories(state.b);
+          const half = (FILLER_ROWS * FILLER_COLS) / 2;
+          const p1Origin = (FILLER_ROWS - 1) * FILLER_COLS + 0;
+          const p2Origin = 0 * FILLER_COLS + (FILLER_COLS - 1);
+
+          if (state.w === "DRAW") statusBox.textContent = `Game over — Tie (${counts.p1} vs ${counts.p2}).`;
+          else if (state.w) statusBox.textContent = `Game over — Player ${state.w} wins (${counts.p1} vs ${counts.p2})!`;
+          else if (locked) statusBox.textContent = `Move recorded! Copy & send the link for Player ${state.t}'s turn.`;
+          else statusBox.textContent = `Turn: Player ${state.t} — Pick a new color to expand.`;
+
+          const meta = document.createElement("div");
+          meta.className = "filler-meta";
+          meta.innerHTML = `<span>P1 (Bottom-Left): <strong>${counts.p1}</strong></span><span>Goal: &gt;${half}</span><span>P2 (Top-Right): <strong>${counts.p2}</strong></span>`;
+          boardArea.appendChild(meta);
+
+          const grid = document.createElement("div");
+          grid.className = "filler-grid";
+          state.b.forEach((colorIdx, idx) => {
+            const cell = document.createElement("div");
+            cell.className =
+              "filler-cell" +
+              (lastCapturedIndices.has(idx) ? " captured" : "") +
+              (idx === p1Origin ? " origin-p1" : "") +
+              (idx === p2Origin ? " origin-p2" : "");
+            cell.style.background = FILLER_COLORS[colorIdx] || "#64748b";
+            if (idx === p1Origin) cell.textContent = "1";
+            else if (idx === p2Origin) cell.textContent = "2";
+            grid.appendChild(cell);
+          });
+          boardArea.appendChild(grid);
+
+          const palette = document.createElement("div");
+          palette.className = "filler-palette";
+          FILLER_COLORS.forEach((hex, cIdx) => {
+            const swatch = document.createElement("button");
+            swatch.type = "button";
+            swatch.className = "filler-swatch";
+            swatch.style.background = hex;
+            const taken = cIdx === counts.p1Color || cIdx === counts.p2Color;
+            swatch.disabled = locked || Boolean(state.w) || taken;
+            swatch.addEventListener("click", () => {
+              const originIdx = state.t === 1 ? p1Origin : p2Origin;
+              const region = getConnectedRegion(state.b, originIdx);
+              lastCapturedIndices = region;
+              region.forEach(idx => { state.b[idx] = cIdx; });
+              const updated = countFillerTerritories(state.b);
+              if (updated.p1 > half) { state.w = 1; SFX.win(); }
+              else if (updated.p2 > half) { state.w = 2; SFX.win(); }
+              else if (updated.p1 === half && updated.p2 === half) { state.w = "DRAW"; SFX.guessMiss(); }
+              else { state.t = state.t === 1 ? 2 : 1; SFX.flood(); }
+              movedThisSession = true;
+              commit(state);
+            });
+            palette.appendChild(swatch);
+          });
+          boardArea.appendChild(palette);
+        }
+      },
+      chess: {
+        name: "Chess",
+        init() {
+          return { g: "chess", b: createInitialChessBoard(), t: "w", cr: "KQkq", ep: null, w: null };
+        },
+        render(state, commit, locked) {
+          const turnLabel = state.t === "w" ? "White" : "Black";
+          const inCheck = !state.w && isInCheck(state.b, state.t);
+
+          if (state.w === "DRAW") statusBox.textContent = "Game over — Stalemate (Draw).";
+          else if (state.w) statusBox.textContent = `Checkmate — ${state.w === "w" ? "White" : "Black"} wins!`;
+          else if (locked) statusBox.textContent = `Move recorded! Copy & send the link for ${turnLabel}'s turn.`;
+          else if (inCheck) statusBox.textContent = `Turn: ${turnLabel} — You are in CHECK!`;
+          else statusBox.textContent = `Turn: ${turnLabel}`;
+
+          const legalForSelected =
+            !locked && !state.w && selectedChessSquare !== null
+              ? getLegalMovesForSquare(state, selectedChessSquare)
+              : [];
+
+          const grid = document.createElement("div");
+          grid.className = "chess-grid";
+          for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+              const idx = r * 8 + c;
+              const piece = state.b[idx];
+              const isLight = (r + c) % 2 === 0;
+              const moveObj = legalForSelected.find(m => m.to === idx);
+              const isSelected = selectedChessSquare === idx;
+              const pColor = pieceColor(piece);
+              const pType = pieceType(piece);
+
+              const sq = document.createElement("button");
+              sq.type = "button";
+              sq.className =
+                "chess-sq " +
+                (isLight ? "light" : "dark") +
+                (pColor === "w" ? " piece-white" : pColor === "b" ? " piece-black" : "") +
+                (isSelected ? " selected" : "") +
+                (moveObj ? (piece || moveObj.enPassant ? " capture" : " target") : "");
+              if (pType) sq.appendChild(createChessPieceSVG(pType));
+              sq.disabled = locked || Boolean(state.w);
+
+              sq.addEventListener("click", () => {
+                if (locked || state.w) return;
+                if (selectedChessSquare !== null && moveObj) {
+                  const res = applyChessMove(state, selectedChessSquare, moveObj);
+                  state.b = res.board;
+                  state.cr = res.rights;
+                  state.ep = res.ep;
+                  selectedChessSquare = null;
+                  const nextColor = state.t === "w" ? "b" : "w";
+                  if (!hasAnyLegalMove(state, nextColor)) {
+                    state.w = isInCheck(state.b, nextColor) ? state.t : "DRAW";
+                    if (state.w === "DRAW") SFX.guessMiss();
+                    else SFX.win();
+                  } else {
+                    state.t = nextColor;
+                    SFX.move();
+                  }
+                  movedThisSession = true;
+                  commit(state);
+                  return;
+                }
+                SFX.click();
+                selectedChessSquare = (piece && pieceColor(piece) === state.t && selectedChessSquare !== idx) ? idx : null;
+                commitState(state);
+              });
+              grid.appendChild(sq);
+            }
+          }
+          boardArea.appendChild(grid);
+        }
+      },
+      wordle: {
+        name: "Wordle Duel",
+        init() {
+          return { g: "wordle", ans: null, guesses: [], maxG: 6, w: null };
+        },
+        render(state, commit, locked) {
+          if (!state.ans) {
+            statusBox.textContent = locked
+              ? "Secret word saved! Send the link to your friend — you can't guess your own word here."
+              : "Word setter: Enter a secret 5-letter word, then send the link.";
+            const form = document.createElement("div");
+            form.className = "inline-form";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.maxLength = 5;
+            input.placeholder = "5-letter word (e.g. CRANE)";
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Set Word";
+            btn.disabled = locked;
+            btn.addEventListener("click", () => {
+              const clean = input.value.trim().toUpperCase().replace(/[^A-Z]/g, "");
+              if (clean.length !== 5) return;
+              state.ans = clean;
+              movedThisSession = true;
+              SFX.move();
+              commit(state);
+            });
+            form.appendChild(input);
+            form.appendChild(btn);
+            boardArea.appendChild(form);
+            return;
+          }
+
+          if (state.w === "P2") {
+            statusBox.textContent = `Game over — Solved in ${state.guesses.length}/${state.maxG}! Word: ${state.ans}. Send results link below!`;
+          } else if (state.w === "P1") {
+            statusBox.textContent = `Game over — Out of guesses! Word was ${state.ans}. Send results link below!`;
+          } else if (locked) {
+            statusBox.textContent = "You set this word — send the link so your friend can guess!";
+          } else {
+            statusBox.textContent = `Guess ${state.guesses.length + 1} of ${state.maxG}: Keep guessing until game over.`;
+          }
+
+          const board = document.createElement("div");
+          board.className = "wordle-board";
+          for (let rowIdx = 0; rowIdx < state.maxG; rowIdx++) {
+            const rowEl = document.createElement("div");
+            rowEl.className = "wordle-row";
+            const entry = state.guesses[rowIdx];
+            for (let colIdx = 0; colIdx < 5; colIdx++) {
+              const tile = document.createElement("div");
+              tile.className = "wordle-tile" + (entry ? " " + entry.r[colIdx] : "");
+              tile.textContent = entry ? entry.w[colIdx] : "";
+              rowEl.appendChild(tile);
+            }
+            board.appendChild(rowEl);
+          }
+          boardArea.appendChild(board);
+
+          if (!state.w && !locked) {
+            const form = document.createElement("div");
+            form.className = "inline-form";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.maxLength = 5;
+            input.placeholder = "Your 5-letter guess";
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Guess";
+            btn.addEventListener("click", () => {
+              const guess = input.value.trim().toUpperCase().replace(/[^A-Z]/g, "");
+              if (guess.length !== 5) return;
+              const marks = scoreWordleGuess(guess, state.ans);
+              state.guesses.push({ w: guess, r: marks });
+              if (guess === state.ans) {
+                state.w = "P2";
+                SFX.win();
+              } else if (state.guesses.length >= state.maxG) {
+                state.w = "P1";
+                SFX.lose();
+              } else {
+                const hasMatch = marks.includes("g") || marks.includes("y");
+                if (hasMatch) SFX.guessHit();
+                else SFX.guessMiss();
+              }
+              movedThisSession = false;
+              commit(state);
+            });
+            form.appendChild(input);
+            form.appendChild(btn);
+            boardArea.appendChild(form);
+          }
+        }
+      },
+      hangman: {
+        name: "Hangman",
+        init() {
+          return { g: "hangman", phrase: null, guessed: [], wrong: 0, maxWrong: 6, w: null };
+        },
+        render(state, commit, locked) {
+          if (!state.phrase) {
+            statusBox.textContent = locked
+              ? "Secret word set! Send the link to your friend — you can't play your own word here."
+              : "Word setter: Enter a secret word or phrase, then send the link.";
+            const form = document.createElement("div");
+            form.className = "inline-form";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.maxLength = 30;
+            input.placeholder = "Secret word or phrase";
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Start";
+            btn.disabled = locked;
+            btn.addEventListener("click", () => {
+              const cleaned = input.value.trim().toUpperCase().replace(/[^A-Z ]/g, "").replace(/\s+/g, " ");
+              if (!cleaned.replace(/\s/g, "").length) return;
+              state.phrase = cleaned;
+              movedThisSession = true;
+              SFX.move();
+              commit(state);
+            });
+            form.appendChild(input);
+            form.appendChild(btn);
+            boardArea.appendChild(form);
+            return;
+          }
+
+          const remainingLives = state.maxWrong - state.wrong;
+          if (state.w === "P2") {
+            statusBox.textContent = `Game over — Solved "${state.phrase}"! Send results link below!`;
+          } else if (state.w === "P1") {
+            statusBox.textContent = `Game over — Out of lives! Word was "${state.phrase}". Send results link below!`;
+          } else if (locked) {
+            statusBox.textContent = "You set this word — send the link so your friend can guess!";
+          } else {
+            statusBox.textContent = `Guess letters until game over — ${remainingLives} wrong guesses left.`;
+          }
+
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("viewBox", "0 0 140 110");
+          svg.style.width = "150px";
+          svg.style.height = "115px";
+          svg.style.display = "block";
+          svg.style.margin = "0 auto 6px";
+          const parts = [
+            '<line x1="20" y1="100" x2="75" y2="100" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>',
+            '<line x1="45" y1="100" x2="45" y2="15" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>',
+            '<line x1="45" y1="15" x2="100" y2="15" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>',
+            '<line x1="100" y1="15" x2="100" y2="30" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>',
+            state.wrong >= 1 ? '<circle cx="100" cy="39" r="9" fill="none" stroke="#f8fafc" stroke-width="3"/>' : "",
+            state.wrong >= 2 ? '<line x1="100" y1="48" x2="100" y2="74" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>' : "",
+            state.wrong >= 3 ? '<line x1="100" y1="54" x2="86" y2="66" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>' : "",
+            state.wrong >= 4 ? '<line x1="100" y1="54" x2="114" y2="66" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>' : "",
+            state.wrong >= 5 ? '<line x1="100" y1="74" x2="88" y2="92" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>' : "",
+            state.wrong >= 6 ? '<line x1="100" y1="74" x2="112" y2="92" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>' : ""
+          ];
+          svg.innerHTML = parts.join("");
+          boardArea.appendChild(svg);
+
+          const wordRow = document.createElement("div");
+          wordRow.className = "hangman-word";
+          let allRevealed = true;
+          for (const ch of state.phrase) {
+            const slot = document.createElement("div");
+            if (ch === " ") {
+              slot.className = "hangman-slot space";
+              slot.textContent = " ";
+            } else {
+              slot.className = "hangman-slot";
+              const shown = state.guessed.includes(ch) || state.w === "P1";
+              if (!state.guessed.includes(ch)) allRevealed = false;
+              slot.textContent = shown ? ch : "";
+            }
+            wordRow.appendChild(slot);
+          }
+          boardArea.appendChild(wordRow);
+
+          if (!state.w && allRevealed) {
+            state.w = "P2";
+          }
+
+          if (!state.w) {
+            const alpha = document.createElement("div");
+            alpha.className = "letter-grid";
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(ch => {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "letter-btn";
+              b.textContent = ch;
+              const used = state.guessed.includes(ch);
+              b.disabled = locked || used;
+              b.addEventListener("click", () => {
+                state.guessed.push(ch);
+                if (!state.phrase.includes(ch)) {
+                  state.wrong += 1;
+                  if (state.wrong >= state.maxWrong) {
+                    state.w = "P1";
+                    SFX.lose();
+                  } else {
+                    SFX.guessMiss();
+                  }
+                } else {
+                  const done = state.phrase.split("").every(c => c === " " || state.guessed.includes(c));
+                  if (done) {
+                    state.w = "P2";
+                    SFX.win();
+                  } else {
+                    SFX.guessHit();
+                  }
+                }
+                movedThisSession = false;
+                commit(state);
+              });
+              alpha.appendChild(b);
+            });
+            boardArea.appendChild(alpha);
+          }
+        }
+      },
+      rps: {
+        name: "Rock Paper Scissors",
+        init() {
+          return { g: "rps", s1: 0, s2: 0, p1Pick: null, lastMsg: "First to 2 wins!", w: null };
+        },
+        render(state, commit, locked) {
+          if (state.w) {
+            statusBox.textContent = `Match over — Player ${state.w} wins ${state.s1}–${state.s2}!`;
+          } else if (locked) {
+            statusBox.textContent = "Pick locked in! Copy & send the link to your friend.";
+          } else if (!state.p1Pick) {
+            statusBox.textContent = "Player 1's turn: Choose Rock, Paper, or Scissors.";
+          } else {
+            statusBox.textContent = "Player 1 has picked! Player 2's turn to choose.";
+          }
+
+          const scores = document.createElement("div");
+          scores.className = "rps-scores";
+          scores.innerHTML = `<span>Player 1: <strong>${state.s1}</strong></span><span>${state.lastMsg}</span><span>Player 2: <strong>${state.s2}</strong></span>`;
+          boardArea.appendChild(scores);
+
+          if (!state.w && !locked) {
+            const choices = document.createElement("div");
+            choices.className = "rps-choices";
+            [
+              { id: "R", label: "🪨 Rock" },
+              { id: "P", label: "📄 Paper" },
+              { id: "S", label: "✂️ Scissors" }
+            ].forEach(item => {
+              const btn = document.createElement("button");
+              btn.type = "button";
+              btn.textContent = item.label;
+              btn.addEventListener("click", () => {
+                if (!state.p1Pick) {
+                  state.p1Pick = item.id;
+                  movedThisSession = true;
+                  SFX.move();
+                  commit(state);
+                } else {
+                  const p1 = state.p1Pick;
+                  const p2 = item.id;
+                  state.p1Pick = null;
+                  if (p1 === p2) {
+                    state.lastMsg = `Tie (${p1} vs ${p2})`;
+                    SFX.guessMiss();
+                  } else if (
+                    (p1 === "R" && p2 === "S") ||
+                    (p1 === "P" && p2 === "R") ||
+                    (p1 === "S" && p2 === "P")
+                  ) {
+                    state.s1 += 1;
+                    state.lastMsg = `P1 wins round (${p1} beats ${p2})`;
+                    SFX.guessHit();
+                  } else {
+                    state.s2 += 1;
+                    state.lastMsg = `P2 wins round (${p2} beats ${p1})`;
+                    SFX.guessHit();
+                  }
+                  if (state.s1 >= 2) { state.w = 1; SFX.win(); }
+                  else if (state.s2 >= 2) { state.w = 2; SFX.win(); }
+                  movedThisSession = true;
+                  commit(state);
+                }
+              });
+              choices.appendChild(btn);
+            });
+            boardArea.appendChild(choices);
+          }
+        }
+      },
+      golf: {
+        name: "Golf",
+        init() {
+          const h0 = GOLF_HOLES[0];
+          return {
+            g: "golf",
+            hole: 0,
+            turn: 1,
+            pos1: { ...h0.start },
+            pos2: { ...h0.start },
+            done1: false,
+            done2: false,
+            strokes1: 0,
+            strokes2: 0,
+            lastNote: "Hole 1 of 3 — Aim and putt toward the flag!",
+            w: null
+          };
+        },
+        render(state, commit, locked) {
+          cancelGolfAnimation();
+          const holeObj = GOLF_HOLES[state.hole] || GOLF_HOLES[0];
+          const activePos = state.turn === 1 ? state.pos1 : state.pos2;
+
+          if (state.w === "DRAW") {
+            statusBox.textContent = `Final (3 Holes): Tied at ${state.strokes1} strokes each!`;
+          } else if (state.w) {
+            statusBox.textContent = `Final (3 Holes): Player ${state.w} wins (${state.strokes1} vs ${state.strokes2} strokes)!`;
+          } else if (locked) {
+            statusBox.textContent = `${state.lastNote} Send link for next turn.`;
+          } else {
+            statusBox.textContent = `Hole ${state.hole + 1}/3 — Player ${state.turn}'s turn (P1: ${state.strokes1} | P2: ${state.strokes2} strokes)`;
+          }
+
+          let curAngle = 0;
+          let curPower = 55;
+          let isSimulating = false;
+          let simBall1 = { ...state.pos1 };
+          let simBall2 = { ...state.pos2 };
+          let trailPoints = [];
+
+          const box = document.createElement("div");
+          box.className = "golf-box";
+          const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("viewBox", "0 0 390 240");
+          svg.style.width = "100%";
+          svg.style.height = "auto";
+          svg.style.display = "block";
+          svg.style.borderRadius = "10px";
+
+          function drawGolfSvg() {
+            const b1 = isSimulating ? simBall1 : state.pos1;
+            const b2 = isSimulating ? simBall2 : state.pos2;
+            const aimOrigin = state.turn === 1 ? b1 : b2;
+            const rad = (curAngle * Math.PI) / 180;
+            const len = 12 + (curPower / 100) * 103;
+            const tipX = aimOrigin.x + Math.cos(rad) * len;
+            const tipY = aimOrigin.y + Math.sin(rad) * len;
+
+            const aimLineMarkup = (!state.w && !locked && !isSimulating)
+              ? `<g class="golf-aim-pulse">
+                   <line x1="${aimOrigin.x}" y1="${aimOrigin.y}" x2="${tipX.toFixed(1)}" y2="${tipY.toFixed(1)}" stroke="#facc15" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="6 3"/>
+                   <circle cx="${tipX.toFixed(1)}" cy="${tipY.toFixed(1)}" r="4.8" fill="#facc15" stroke="#0f172a" stroke-width="1.5"/>
+                 </g>`
+              : "";
+
+            const trailMarkup = trailPoints.length > 1
+              ? `<polyline fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 3" points="${trailPoints.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(" ")}"/>`
+              : "";
+
+            svg.innerHTML = `
+              <defs>
+                <pattern id="turfStripes" width="28" height="240" patternUnits="userSpaceOnUse">
+                  <rect width="14" height="240" fill="#15803d"/>
+                  <rect x="14" width="14" height="240" fill="#16a34a" opacity="0.55"/>
+                </pattern>
+                <radialGradient id="ballP1" cx="35%" cy="30%" r="65%">
+                  <stop offset="0%" stop-color="#bae6fd"/>
+                  <stop offset="100%" stop-color="#0284c7"/>
+                </radialGradient>
+                <radialGradient id="ballP2" cx="35%" cy="30%" r="65%">
+                  <stop offset="0%" stop-color="#fed7aa"/>
+                  <stop offset="100%" stop-color="#ea580c"/>
+                </radialGradient>
+              </defs>
+              <rect x="4" y="4" width="382" height="232" rx="14" fill="#14532d"/>
+              <rect x="14" y="14" width="362" height="212" rx="10" fill="url(#turfStripes)" stroke="#86efac" stroke-width="2"/>
+              <rect x="${holeObj.wall.x + 2}" y="${holeObj.wall.y + 3}" width="${holeObj.wall.w}" height="${holeObj.wall.h}" rx="5" fill="rgba(0,0,0,0.35)"/>
+              <rect x="${holeObj.wall.x}" y="${holeObj.wall.y}" width="${holeObj.wall.w}" height="${holeObj.wall.h}" rx="5" fill="#92400e" stroke="#fbbf24" stroke-width="1.7"/>
+              <circle cx="${holeObj.cup.x + 1.5}" cy="${holeObj.cup.y + 2}" r="13.5" fill="rgba(0,0,0,0.35)"/>
+              <circle cx="${holeObj.cup.x}" cy="${holeObj.cup.y}" r="13" fill="#090d16" stroke="#f8fafc" stroke-width="2"/>
+              <line x1="${holeObj.cup.x}" y1="${holeObj.cup.y}" x2="${holeObj.cup.x}" y2="${holeObj.cup.y - 23}" stroke="#f8fafc" stroke-width="2.4" stroke-linecap="round"/>
+              <polygon points="${holeObj.cup.x},${holeObj.cup.y - 23} ${holeObj.cup.x + 13},${holeObj.cup.y - 17.5} ${holeObj.cup.x},${holeObj.cup.y - 12}" fill="#ef4444"/>
+              ${trailMarkup}
+              ${aimLineMarkup}
+              <circle cx="${b1.x.toFixed(1)}" cy="${b1.y.toFixed(1)}" r="7.2" fill="url(#ballP1)" stroke="#082f49" stroke-width="1.8"/>
+              <circle cx="${b2.x.toFixed(1)}" cy="${b2.y.toFixed(1)}" r="7.2" fill="url(#ballP2)" stroke="#431407" stroke-width="1.8"/>
+            `;
+          }
+
+          drawGolfSvg();
+          box.appendChild(svg);
+          boardArea.appendChild(box);
+
+          if (!state.w && !locked) {
+            const controls = document.createElement("div");
+            controls.className = "golf-controls";
+
+            const angleLabel = document.createElement("label");
+            const angleVal = document.createElement("span");
+            angleVal.textContent = "0°";
+            const angleInput = document.createElement("input");
+            angleInput.type = "range";
+            angleInput.min = "-180";
+            angleInput.max = "180";
+            angleInput.value = "0";
+            angleInput.addEventListener("input", () => {
+              curAngle = Number(angleInput.value);
+              angleVal.textContent = `${curAngle}°`;
+              if (!isSimulating) drawGolfSvg();
+            });
+            angleLabel.append("Angle: ", angleInput, angleVal);
+
+            const powerLabel = document.createElement("label");
+            const powerVal = document.createElement("span");
+            powerVal.textContent = "55%";
+            const powerInput = document.createElement("input");
+            powerInput.type = "range";
+            powerInput.min = "15";
+            powerInput.max = "100";
+            powerInput.value = "55";
+            powerInput.addEventListener("input", () => {
+              curPower = Number(powerInput.value);
+              powerVal.textContent = `${curPower}%`;
+              if (!isSimulating) drawGolfSvg();
+            });
+            powerLabel.append("Power: ", powerInput, powerVal);
+
+            const puttBtn = document.createElement("button");
+            puttBtn.type = "button";
+            puttBtn.textContent = `Putt as Player ${state.turn}`;
+            puttBtn.addEventListener("click", () => {
+              if (isSimulating) return;
+              isSimulating = true;
+              puttBtn.disabled = true;
+              angleInput.disabled = true;
+              powerInput.disabled = true;
+
+              SFX.putt(curPower);
+              const rad = (curAngle * Math.PI) / 180;
+              const speed = (curPower / 100) * 13.5;
+              let body = {
+                x: activePos.x,
+                y: activePos.y,
+                vx: Math.cos(rad) * speed,
+                vy: Math.sin(rad) * speed
+              };
+              trailPoints = [{ x: body.x, y: body.y }];
+              statusBox.textContent = `Player ${state.turn} is putting...`;
+
+              let bounceCooldown = 0;
+
+              function tick() {
+                if (bounceCooldown > 0) bounceCooldown -= 1;
+                const stepRes = stepGolfPhysics(state.hole, body);
+                body = { x: stepRes.x, y: stepRes.y, vx: stepRes.vx, vy: stepRes.vy };
+                trailPoints.push({ x: body.x, y: body.y });
+
+                if (stepRes.bounced && bounceCooldown === 0 && Math.hypot(body.vx, body.vy) > 1.2) {
+                  SFX.bounce();
+                  bounceCooldown = 5;
+                }
+
+                if (state.turn === 1) simBall1 = { x: body.x, y: body.y };
+                else simBall2 = { x: body.x, y: body.y };
+                drawGolfSvg();
+
+                if (!stepRes.stopped) {
+                  activeGolfAnimId = requestAnimationFrame(tick);
+                  return;
+                }
+
+                activeGolfAnimId = null;
+                const finalPos = { x: Math.round(body.x), y: Math.round(body.y) };
+
+                if (state.turn === 1) {
+                  state.pos1 = finalPos;
+                  state.strokes1 += 1;
+                  if (stepRes.holed) state.done1 = true;
+                } else {
+                  state.pos2 = finalPos;
+                  state.strokes2 += 1;
+                  if (stepRes.holed) state.done2 = true;
+                }
+
+                if (stepRes.holed) SFX.cupSink();
+
+                state.lastNote = stepRes.holed
+                  ? `Player ${state.turn} sank the putt!`
+                  : `Player ${state.turn} putt completed.`;
+
+                if (state.done1 && state.done2) {
+                  if (state.hole + 1 < GOLF_HOLES.length) {
+                    state.hole += 1;
+                    const nextH = GOLF_HOLES[state.hole];
+                    state.pos1 = { ...nextH.start };
+                    state.pos2 = { ...nextH.start };
+                    state.done1 = false;
+                    state.done2 = false;
+                    state.turn = 1;
+                    state.lastNote = `Moved to Hole ${state.hole + 1}!`;
+                  } else {
+                    if (state.strokes1 < state.strokes2) { state.w = 1; SFX.win(); }
+                    else if (state.strokes2 < state.strokes1) { state.w = 2; SFX.win(); }
+                    else { state.w = "DRAW"; SFX.guessMiss(); }
+                  }
+                } else if (state.turn === 1 && !state.done2) {
+                  state.turn = 2;
+                } else if (state.turn === 2 && !state.done1) {
+                  state.turn = 1;
+                }
+
+                movedThisSession = true;
+                commit(state);
+              }
+
+              activeGolfAnimId = requestAnimationFrame(tick);
+            });
+
+            controls.appendChild(angleLabel);
+            controls.appendChild(powerLabel);
+            controls.appendChild(puttBtn);
+            boardArea.appendChild(controls);
+          }
+        }
+      },
+      paintball: {
+        name: "Paintball",
+        init() {
+          return {
+            g: "paintball",
+            hp1: 3,
+            hp2: 3,
+            p1Plan: null,
+            lastResult: "Pick a tire to hide behind and a tire to shoot!",
+            lastHits: [],
+            w: null
+          };
+        },
+        render(state, commit, locked) {
+          let chosenHide = null;
+          let chosenShoot = null;
+
+          if (state.w === "DRAW") statusBox.textContent = "Double KO! Match ends in a draw.";
+          else if (state.w) statusBox.textContent = `Game over — Player ${state.w} wins!`;
+          else if (locked) statusBox.textContent = `${state.lastResult} Send link for next turn.`;
+          else if (!state.p1Plan) statusBox.textContent = "Player 1: Pick Hide tire & Shoot tire, then lock in.";
+          else statusBox.textContent = "Player 1 locked in! Player 2: Pick Hide tire & Shoot tire.";
+
+          const hpBar = document.createElement("div");
+          hpBar.className = "pb-status";
+          hpBar.innerHTML = `<span>P1 Lives: <strong>${"●".repeat(state.hp1)}${"○".repeat(3 - state.hp1)}</strong></span><span>P2 Lives: <strong>${"●".repeat(state.hp2)}${"○".repeat(3 - state.hp2)}</strong></span>`;
+          boardArea.appendChild(hpBar);
+
+          const note = document.createElement("div");
+          note.className = "status";
+          note.textContent = state.lastResult;
+          boardArea.appendChild(note);
+
+          const submitBtn = document.createElement("button");
+          submitBtn.type = "button";
+          submitBtn.style.width = "100%";
+          submitBtn.textContent = !state.p1Plan ? "Lock In Player 1 Move" : "Pop Out & Shoot!";
+          submitBtn.disabled = true;
+
+          const lanes = document.createElement("div");
+          lanes.className = "pb-lanes";
+          const tireNames = ["Left Tire", "Center Tire", "Right Tire"];
+          const laneEls = [];
+          const activeHits = Array.isArray(state.lastHits) ? state.lastHits : [];
+
+          function renderBunkerInLane(laneObj, idx) {
+            const hitEntry = activeHits.find(h => h.lane === idx);
+            const hitColor = hitEntry ? (hitEntry.by === 1 ? "#38bdf8" : "#fb923c") : null;
+            const freshSvg = createPaintballBunkerSVG(
+              idx,
+              chosenHide === idx,
+              chosenShoot === idx,
+              hitColor
+            );
+            laneObj.svg.replaceWith(freshSvg);
+            laneObj.svg = freshSvg;
+          }
+
+          function syncLaneHighlights() {
+            laneEls.forEach((l, i) => {
+              l.hideBtn.classList.toggle("picked", chosenHide === i);
+              l.shootBtn.classList.toggle("picked", chosenShoot === i);
+              l.lane.classList.toggle("has-pick", chosenHide === i || chosenShoot === i);
+              renderBunkerInLane(l, i);
+            });
+          }
+
+          tireNames.forEach((label, idx) => {
+            const lane = document.createElement("div");
+            lane.className = "pb-lane";
+            lane.innerHTML = `<div class="pb-lane-title">${label}</div>`;
+
+            const bunkerSvg = createPaintballBunkerSVG(idx, false, false, null);
+            lane.appendChild(bunkerSvg);
+
+            const actions = document.createElement("div");
+            actions.className = "pb-actions";
+
+            const hideBtn = document.createElement("button");
+            hideBtn.type = "button";
+            hideBtn.textContent = "Hide";
+            hideBtn.disabled = locked || Boolean(state.w);
+
+            const shootBtn = document.createElement("button");
+            shootBtn.type = "button";
+            shootBtn.className = "ghost";
+            shootBtn.textContent = "Shoot";
+            shootBtn.disabled = locked || Boolean(state.w);
+
+            hideBtn.addEventListener("click", () => {
+              chosenHide = idx;
+              SFX.pbPick();
+              syncLaneHighlights();
+              if (chosenHide !== null && chosenShoot !== null) submitBtn.disabled = false;
+            });
+
+            shootBtn.addEventListener("click", () => {
+              chosenShoot = idx;
+              SFX.pbPick();
+              syncLaneHighlights();
+              if (chosenHide !== null && chosenShoot !== null) submitBtn.disabled = false;
+            });
+
+            actions.appendChild(hideBtn);
+            actions.appendChild(shootBtn);
+            lane.appendChild(actions);
+            lanes.appendChild(lane);
+            const laneRecord = { lane, svg: bunkerSvg, hideBtn, shootBtn };
+            laneEls.push(laneRecord);
+            renderBunkerInLane(laneRecord, idx);
+          });
+
+          boardArea.appendChild(lanes);
+
+          if (!state.w && !locked) {
+            submitBtn.addEventListener("click", () => {
+              if (chosenHide === null || chosenShoot === null) return;
+              if (!state.p1Plan) {
+                state.p1Plan = { hide: chosenHide, shoot: chosenShoot };
+                state.lastResult = "Player 1 hid & aimed. Waiting on Player 2.";
+                state.lastHits = [];
+                movedThisSession = true;
+                SFX.move();
+                commit(state);
+              } else {
+                const p1 = state.p1Plan;
+                const p2 = { hide: chosenHide, shoot: chosenShoot };
+                state.p1Plan = null;
+
+                const p1HitP2 = p1.shoot === p2.hide;
+                const p2HitP1 = p2.shoot === p1.hide;
+                const hits = [];
+                if (p1HitP2) {
+                  state.hp2 = Math.max(0, state.hp2 - 1);
+                  hits.push({ lane: p1.shoot, by: 1 });
+                }
+                if (p2HitP1) {
+                  state.hp1 = Math.max(0, state.hp1 - 1);
+                  hits.push({ lane: p2.shoot, by: 2 });
+                }
+                state.lastHits = hits;
+
+                state.lastResult = [
+                  p1HitP2 ? `P1 shot ${tireNames[p1.shoot]} and hit P2!` : `P1 shot ${tireNames[p1.shoot]} (miss).`,
+                  p2HitP1 ? `P2 shot ${tireNames[p2.shoot]} and hit P1!` : `P2 shot ${tireNames[p2.shoot]} (miss).`
+                ].join(" ");
+
+                if (state.hp1 <= 0 && state.hp2 <= 0) {
+                  state.w = "DRAW";
+                  SFX.pbHit();
+                } else if (state.hp2 <= 0) {
+                  state.w = 1;
+                  SFX.win();
+                } else if (state.hp1 <= 0) {
+                  state.w = 2;
+                  SFX.win();
+                } else if (hits.length > 0) {
+                  SFX.pbHit();
+                } else {
+                  SFX.pbShot();
+                }
+
+                movedThisSession = true;
+                commit(state);
+              }
+            });
+            boardArea.appendChild(submitBtn);
+          }
+        }
       }
     };
 
     function checkTTTWin(b) {
-      const wins = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-      ];
+      const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
       for (const [a, c, d] of wins) {
         if (b[a] && b[a] === b[c] && b[a] === b[d]) return b[a];
       }
@@ -343,10 +2363,8 @@
           for (const [dr, dc] of dirs) {
             let count = 1;
             for (let k = 1; k < 4; k++) {
-              const nr = r + dr * k;
-              const nc = c + dc * k;
-              if (nr < 0 || nr >= 6 || nc < 0 || nc >= 7) break;
-              if (b[nr * 7 + nc] !== p) break;
+              const nr = r + dr * k, nc = c + dc * k;
+              if (nr < 0 || nr >= 6 || nc < 0 || nc >= 7 || b[nr * 7 + nc] !== p) break;
               count++;
             }
             if (count === 4) return p;
@@ -382,19 +2400,33 @@
     let currentState = null;
 
     function showLobby() {
+      cancelGolfAnimation();
+      lastCapturedIndices = new Set();
       currentState = null;
       movedThisSession = false;
+      selectedChessSquare = null;
       history.replaceState(null, "", location.pathname + location.search);
       matchView.classList.add("hidden");
+      matchView.classList.remove("anim-view");
       lobbyView.classList.remove("hidden");
+      lobbyView.classList.remove("anim-view");
+      void lobbyView.offsetWidth;
+      lobbyView.classList.add("anim-view");
+      syncSoundButtons();
     }
 
     function commitState(nextState) {
+      cancelGolfAnimation();
+      const enteringMatch = matchView.classList.contains("hidden");
       currentState = nextState;
       const encoded = encodeState(currentState);
       const url = `${location.origin}${location.pathname}#s=${encoded}`;
       history.replaceState(null, "", `#s=${encoded}`);
       linkField.value = url;
+
+      linkLabel.textContent = currentState.w
+        ? "Game over — send this results link:"
+        : "Send this link for the next turn:";
 
       const gameDef = GAMES[currentState.g];
       const locked = movedThisSession && !currentState.w;
@@ -403,19 +2435,31 @@
       matchTitle.textContent = gameDef.name;
       lobbyView.classList.add("hidden");
       matchView.classList.remove("hidden");
+      if (enteringMatch) {
+        matchView.classList.remove("anim-view");
+        void matchView.offsetWidth;
+        matchView.classList.add("anim-view");
+      }
       boardArea.innerHTML = "";
       gameDef.render(currentState, commitState, locked);
+      replayBoardAnimation();
+      syncSoundButtons();
     }
 
     unlockBtn.addEventListener("click", () => {
       if (!currentState) return;
+      SFX.click();
       movedThisSession = false;
       commitState(currentState);
     });
 
     document.querySelectorAll("[data-start-game]").forEach(btn => {
       btn.addEventListener("click", () => {
+        cancelGolfAnimation();
+        lastCapturedIndices = new Set();
+        SFX.click();
         movedThisSession = false;
+        selectedChessSquare = null;
         const key = btn.getAttribute("data-start-game");
         commitState(GAMES[key].init());
       });
@@ -423,13 +2467,21 @@
 
     document.getElementById("restartBtn").addEventListener("click", () => {
       if (!currentState) return;
+      cancelGolfAnimation();
+      lastCapturedIndices = new Set();
+      SFX.click();
       movedThisSession = false;
+      selectedChessSquare = null;
       commitState(GAMES[currentState.g].init());
     });
 
-    document.getElementById("lobbyBtn").addEventListener("click", showLobby);
+    document.getElementById("lobbyBtn").addEventListener("click", () => {
+      SFX.click();
+      showLobby();
+    });
 
     document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      SFX.click();
       try {
         await navigator.clipboard.writeText(linkField.value);
         feedback.textContent = "Copied! Paste into iMessage.";
@@ -442,7 +2494,10 @@
     });
 
     window.addEventListener("hashchange", () => {
+      cancelGolfAnimation();
+      lastCapturedIndices = new Set();
       movedThisSession = false;
+      selectedChessSquare = null;
       const loaded = decodeState(location.hash);
       if (loaded) commitState(loaded);
       else showLobby();
