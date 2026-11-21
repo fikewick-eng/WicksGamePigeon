@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WicksGamePigeon</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: #162033;
+      --panel-2: #0f172a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #082f49;
+      --border: #293548;
+      --p1: #38bdf8;
+      --p2: #f97316;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 18px;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 440px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      align-self: flex-start;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    h1 { margin: 0; font-size: 1.35rem; }
+    .sub { margin: 4px 0 16px; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+    .game-list { display: grid; gap: 10px; }
+    .game-card {
+      width: 100%;
+      text-align: left;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .game-card:hover { border-color: var(--accent); }
+    .game-title { font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
+    .game-desc { color: var(--muted); font-size: 0.85rem; }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: var(--accent-dark);
+    }
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    button.ghost {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .status {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      font-size: 0.93rem;
+      line-height: 1.35;
+    }
+    .ttt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0 16px;
+    }
+    .ttt-cell {
+      aspect-ratio: 1;
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .c4-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      padding: 10px;
+      border-radius: 12px;
+      margin: 12px 0 16px;
+    }
+    .c4-slot {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0;
+    }
+    .c4-slot.p1 { background: var(--p1); border-color: var(--p1); }
+    .c4-slot.p2 { background: var(--p2); border-color: var(--p2); }
+    .share {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .share label {
+      display: block;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .share-row { display: flex; gap: 8px; }
+    .share input {
+      flex: 1;
+      min-width: 0;
+      background: var(--panel-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 0.8rem;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      gap: 8px;
+    }
+    .feedback {
+      min-height: 1.2em;
+      font-size: 0.84rem;
+      color: #4ade80;
+    }
+    .unlock-link {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 2px 4px;
+      text-decoration: underline;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="lobbyView">
+      <h1>WicksGamePigeon</h1>
+      <p class="sub">Choose a game and then send the link to me and then i will send the link back</p>
+      <div class="game-list">
+        <button type="button" class="game-card" data-start-game="ttt">
+          <div class="game-title">Tic tac toe</div>
+          <div class="game-desc">This is tic tac toe YAYAYAYA</div>
+        </button>
+        <button type="button" class="game-card" data-start-game="c4">
+          <div class="game-title">Connect four</div>
+          <div class="game-desc">Play</div>
+        </button>
+      </div>
+    </div>
+
+    <div id="matchView" class="hidden">
+      <div class="top">
+        <h1 id="matchTitle">Match</h1>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="restartBtn" class="ghost">Restart</button>
+          <button type="button" id="lobbyBtn" class="ghost">Games</button>
+        </div>
+      </div>
+      <div id="statusBox" class="status"></div>
+      <div id="boardArea"></div>
+
+      <div class="share">
+        <label for="linkField">Send this link to do the next turn</label>
+        <div class="share-row">
+          <input id="linkField" type="text" readonly />
+          <button type="button" id="copyLinkBtn">Copy Link</button>
+        </div>
+        <div class="meta-row">
+          <div id="feedback" class="feedback"></div>
+          <button type="button" id="unlockBtn" class="unlock-link hidden">Unlock (Pass &amp; Play)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lobbyView = document.getElementById("lobbyView");
+    const matchView = document.getElementById("matchView");
+    const matchTitle = document.getElementById("matchTitle");
+    const statusBox = document.getElementById("statusBox");
+    const boardArea = document.getElementById("boardArea");
+    const linkField = document.getElementById("linkField");
+    const feedback = document.getElementById("feedback");
+    const unlockBtn = document.getElementById("unlockBtn");
+
+    // Locks extra moves on the SAME page load after you take your turn
+    let movedThisSession = false;
+
+    const GAMES = {
+      ttt: {
+        name: "Tic tac toe",
+        init() {
+          return {
+            g: "ttt",
+            b: ["", "", "", "", "", "", "", "", ""],
+            t: "X",
+            w: null
+          };
+        },
+        render(state, commit, locked) {
+          if (state.w === "DRAW") {
+            statusBox.textContent = "Game over draw.";
+          } else if (state.w) {
+            statusBox.textContent = `Game over player ${state.w} won`;
+          } else if (locked) {
+            statusBox.textContent = `Copy and send the link player ${state.t}s turn.`;
+          } else {
+            statusBox.textContent = `Turn player ${state.t}`;
+          }
+
+          const grid = document.createElement("div");
+          grid.className = "ttt-grid";
+          state.b.forEach((val, idx) => {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "ttt-cell";
+            cell.textContent = val;
+            cell.disabled = locked || Boolean(val) || Boolean(state.w);
+            cell.addEventListener("click", () => {
+              state.b[idx] = state.t;
+              state.w = checkTTTWin(state.b);
+              if (!state.w) state.t = state.t === "X" ? "O" : "X";
+              movedThisSession = true;
+              commit(state);
+            });
+            grid.appendChild(cell);
+          });
+          boardArea.appendChild(grid);
+        }
+      },
+      c4: {
+        name: "Connect Four",
+        init() {
+          return {
+            g: "c4",
+            b: Array(42).fill(0),
+            t: 1,
+            w: null
+          };
+        },
+        render(state, commit, locked) {
+          if (state.w === "DRAW") {
+            statusBox.textContent = "Game over — Board is full (Draw).";
+          } else if (state.w) {
+            statusBox.textContent = `Game over — Player ${state.w} wins!`;
+          } else if (locked) {
+            statusBox.textContent = `Move recorded! Copy & send the link for Player ${state.t}'s turn.`;
+          } else {
+            statusBox.textContent = `Turn: Player ${state.t} (${state.t === 1 ? "Blue" : "Orange"})`;
+          }
+
+          const grid = document.createElement("div");
+          grid.className = "c4-grid";
+
+          for (let r = 0; r < 6; r++) {
+            for (let c = 0; c < 7; c++) {
+              const idx = r * 7 + c;
+              const v = state.b[idx];
+              const slot = document.createElement("button");
+              slot.type = "button";
+              slot.className = "c4-slot" + (v === 1 ? " p1" : v === 2 ? " p2" : "");
+              slot.disabled = locked || Boolean(state.w);
+              slot.title = `Column ${c + 1}`;
+              slot.addEventListener("click", () => {
+                const targetRow = findDropRow(state.b, c);
+                if (targetRow === -1) return;
+                state.b[targetRow * 7 + c] = state.t;
+                state.w = checkC4Win(state.b);
+                if (!state.w) state.t = state.t === 1 ? 2 : 1;
+                movedThisSession = true;
+                commit(state);
+              });
+              grid.appendChild(slot);
+            }
+          }
+          boardArea.appendChild(grid);
+        }
+      }
+    };
+
+    function checkTTTWin(b) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (const [a, c, d] of wins) {
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) return b[a];
+      }
+      return b.every(Boolean) ? "DRAW" : null;
+    }
+
+    function findDropRow(b, col) {
+      for (let r = 5; r >= 0; r--) {
+        if (b[r * 7 + col] === 0) return r;
+      }
+      return -1;
+    }
+
+    function checkC4Win(b) {
+      const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 7; c++) {
+          const p = b[r * 7 + c];
+          if (!p) continue;
+          for (const [dr, dc] of dirs) {
+            let count = 1;
+            for (let k = 1; k < 4; k++) {
+              const nr = r + dr * k;
+              const nc = c + dc * k;
+              if (nr < 0 || nr >= 6 || nc < 0 || nc >= 7) break;
+              if (b[nr * 7 + nc] !== p) break;
+              count++;
+            }
+            if (count === 4) return p;
+          }
+        }
+      }
+      return b.every(x => x !== 0) ? "DRAW" : null;
+    }
+
+    function encodeState(obj) {
+      const bytes = new TextEncoder().encode(JSON.stringify(obj));
+      let bin = "";
+      bytes.forEach(byte => { bin += String.fromCharCode(byte); });
+      return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    }
+
+    function decodeState(hash) {
+      if (!hash || !hash.startsWith("#s=")) return null;
+      try {
+        let b64 = hash.slice(3).replace(/-/g, "+").replace(/_/g, "/");
+        while (b64.length % 4) b64 += "=";
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const parsed = JSON.parse(new TextDecoder().decode(bytes));
+        if (!parsed || !GAMES[parsed.g]) return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    let currentState = null;
+
+    function showLobby() {
+      currentState = null;
+      movedThisSession = false;
+      history.replaceState(null, "", location.pathname + location.search);
+      matchView.classList.add("hidden");
+      lobbyView.classList.remove("hidden");
+    }
+
+    function commitState(nextState) {
+      currentState = nextState;
+      const encoded = encodeState(currentState);
+      const url = `${location.origin}${location.pathname}#s=${encoded}`;
+      history.replaceState(null, "", `#s=${encoded}`);
+      linkField.value = url;
+
+      const gameDef = GAMES[currentState.g];
+      const locked = movedThisSession && !currentState.w;
+      unlockBtn.classList.toggle("hidden", !locked);
+
+      matchTitle.textContent = gameDef.name;
+      lobbyView.classList.add("hidden");
+      matchView.classList.remove("hidden");
+      boardArea.innerHTML = "";
+      gameDef.render(currentState, commitState, locked);
+    }
+
+    unlockBtn.addEventListener("click", () => {
+      if (!currentState) return;
+      movedThisSession = false;
+      commitState(currentState);
+    });
+
+    document.querySelectorAll("[data-start-game]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        movedThisSession = false;
+        const key = btn.getAttribute("data-start-game");
+        commitState(GAMES[key].init());
+      });
+    });
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      if (!currentState) return;
+      movedThisSession = false;
+      commitState(GAMES[currentState.g].init());
+    });
+
+    document.getElementById("lobbyBtn").addEventListener("click", showLobby);
+
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(linkField.value);
+        feedback.textContent = "Copied! Paste into iMessage.";
+      } catch {
+        linkField.select();
+        document.execCommand("copy");
+        feedback.textContent = "Selected link — copy & paste into iMessage.";
+      }
+      setTimeout(() => { feedback.textContent = ""; }, 2200);
+    });
+
+    window.addEventListener("hashchange", () => {
+      movedThisSession = false;
+      const loaded = decodeState(location.hash);
+      if (loaded) commitState(loaded);
+      else showLobby();
+    });
+
+    const initial = decodeState(location.hash);
+    if (initial) commitState(initial);
+    else showLobby();
+  </script>
+</body>
+</html>
